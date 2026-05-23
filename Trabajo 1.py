@@ -4,8 +4,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
-#IMPACTO DEL TELETRABAJO EN LA TASA DE VIAJES
+# FUENTE: Directorio de Transporte Público Metropolitano (DTPM)
+# Reporte de Movilidad 2025. Ministerio de Transportes y
+# Telecomunicaciones, Gobierno de Chile. Marzo 2026.
+
+#PARTE 1: IMPACTO DEL TELETRABAJO EN LA TASA DE VIAJES
 print(" ANÁLISIS DE GENERACIÓN DE VIAJES Y TELETRABAJO")
+print("-" * 50)
 
 # Simulación basada en datos del Reporte 2025
 np.random.seed(42)
@@ -13,19 +18,21 @@ n_usuarios = 500
 
 data_viajes = {
     # 0 = Femenino (Tasa promedio 2.67), 1 = Masculino (Tasa promedio 3.16)
-    'es_hombre': np.random.randint(0, 2, n_usuarios),
+    'es_hombre' : np.random.randint(0, 2, n_usuarios),
     # Días de teletrabajo a la semana (0 a 5)
-    'dias_teletrabajo': np.random.choice([0, 1, 2, 3, 4, 5], n_usuarios, p=[0.6, 0.1, 0.1, 0.05, 0.05, 0.1]),
+    'dias_teletrabajo' : np.random.choice(
+    [0, 1, 2, 3, 4, 5], n_usuarios, 
+    p=[0.60, 0.10, 0.10, 0.05, 0.05, 0.10]
+    ),
     # Nivel de ingresos simulado 
-    'ingreso_perc': np.random.uniform(1, 5, n_usuarios) 
+'ingreso_percentil' : np.random.uniform(1, 5, n_usuarios) 
 }
-
 # Generar variable objetivo: Tasa de viajes diarios 
 data_viajes['viajes_diarios'] = (
     2.67 + 
     0.49 * data_viajes['es_hombre'] - 
     0.35 * data_viajes['dias_teletrabajo'] + 
-    0.1 * data_viajes['ingreso_perc'] +
+    0.1 * data_viajes['ingreso_percentil'] +
     np.random.normal(0, 0.4, n_usuarios) # Ruido aleatorio
 )
 
@@ -36,7 +43,7 @@ df_generacion = pd.DataFrame(data_viajes)
 print(f"Promedio global simulado: {df_generacion['viajes_diarios'].mean():.2f} viajes/día (Cercano al 3.07 del reporte)\n")
 
 # División de datos y entrenamiento del Modelo
-X_gen = df_generacion[['es_hombre', 'dias_teletrabajo', 'ingreso_perc']]
+X_gen = df_generacion[['es_hombre', 'dias_teletrabajo', 'ingreso_percentil']]
 y_gen = df_generacion['viajes_diarios']
 
 X_train_gen, X_test_gen, y_train_gen, y_test_gen = train_test_split(X_gen, y_gen, test_size=0.2, random_state=42)
@@ -73,20 +80,26 @@ df_tiempos['tiempo_min'] = df_tiempos.apply(
     lambda row: row['distancia_km'] / velocidades[row['modo']] + np.random.normal(0, 5), axis=1
 )
 
-# One-Hot Encoding: Convertir el modo categórico a variables Dummy
-df_tiempos_encoded = pd.get_dummies(df_tiempos, columns=['modo'], drop_first=True)
+# Convertir modo a variables numéricas (auto = referencia)
+df_tiempos['es_metro']    = (df_tiempos['modo'] == 'Metro').astype(int)
+df_tiempos['es_bus']      = (df_tiempos['modo'] == 'Bus').astype(int)
+df_tiempos['es_caminata'] = (df_tiempos['modo'] == 'Caminata').astype(int)
 
 # Entrenamiento del Modelo
-X_time = df_tiempos_encoded.drop('tiempo_min', axis=1)
-y_time = df_tiempos_encoded['tiempo_min']
+X_time = df_tiempos[['distancia_km', 'es_metro', 'es_bus', 'es_caminata']]
+y_time = df_tiempos['tiempo_min']
+
+X_train_time, X_test_time, y_train_time, y_test_time = train_test_split(
+    X_time, y_time, test_size=0.2, random_state=42
+)
 
 modelo_tiempos = LinearRegression()
-modelo_tiempos.fit(X_time, y_time)
+modelo_tiempos.fit(X_train_time, y_train_time)
 
 # Evaluación (MAE y R²)
-r2_tiempos = modelo_tiempos.score(X_time, y_time)
-y_pred_tiempos = modelo_tiempos.predict(X_time)
-mae_tiempos = mean_absolute_error(y_time, y_pred_tiempos)
+y_pred_tiempos = modelo_tiempos.predict(X_test_time)
+r2_tiempos = r2_score(y_test_time, y_pred_tiempos)
+mae_tiempos = mean_absolute_error(y_test_time, y_pred_tiempos)
 
 print(f"R² del modelo: {r2_tiempos:.4f}")
 print(f"Error Absoluto Medio (MAE): {mae_tiempos:.2f} minutos.")
