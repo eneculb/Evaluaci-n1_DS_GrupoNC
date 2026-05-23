@@ -4,11 +4,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
+#-------------------------------------------------------------
 # FUENTE: Directorio de Transporte Público Metropolitano (DTPM)
 # Reporte de Movilidad 2025. Ministerio de Transportes y
 # Telecomunicaciones, Gobierno de Chile. Marzo 2026.
+--------------------------------------------------------------
 
-#PARTE 1: IMPACTO DEL TELETRABAJO EN LA TASA DE VIAJES
+-------------------------------------------------------
+#IMPACTO DEL TELETRABAJO EN LA TASA DE VIAJES (dataset)
+-------------------------------------------------------
 print(" ANÁLISIS DE GENERACIÓN DE VIAJES Y TELETRABAJO")
 print("-" * 50)
 
@@ -36,9 +40,26 @@ data_viajes['viajes_diarios'] = (
     np.random.normal(0, 0.4, n_usuarios) # Ruido aleatorio
 )
 
-# Limpiar datos: No pueden existir viajes negativos
-data_viajes['viajes_diarios'] = np.maximum(0, data_viajes['viajes_diarios']) 
+--------------------------------------------------------------
+# LIMPIAR DATOS (no puede haber negativos, ni filas duplicadas)
+--------------------------------------------------------------
+print("LIMPIEZA DE DATOS")
+print("-" * 50)
 
+print(f"Valores nulos:\n{df.isnull().sum()}\n")
+
+filas_duplicadas = df.duplicated().sum()
+print(f"Filas duplicadas: {filas_duplicadas}")
+
+if filas_duplicadas > 0:
+    df = df.drop_duplicates().reset_index(drop=True)
+    print(f"Filas después de limpiar: {len(df)}")
+
+print(f"\nDataset listo: {df.shape[0]} filas, {df.shape[1]} columnas")
+
+-----------------------------
+#MODELO REGRESIÓN TELETRABAJO
+-----------------------------
 df_generacion = pd.DataFrame(data_viajes)
 print(f"Promedio global simulado: {df_generacion['viajes_diarios'].mean():.2f} viajes/día (Cercano al 3.07 del reporte)\n")
 
@@ -106,3 +127,7 @@ print(f"Error Absoluto Medio (MAE): {mae_tiempos:.2f} minutos.")
 print("\nInterpretación:")
 print("Las predicciones de tiempo de llegada de este modelo fallan, en promedio, por ese margen de minutos.")
 print("="*60)
+
+
+
+
