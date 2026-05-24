@@ -8,6 +8,7 @@ from datos import df_modal, df_genero, df_tiempos, df_tp, df_comunas, FEATURES
 def titulo(texto):
     print(f"\n{'='*50}\n  {texto}\n{'='*50}")
 
+#estadisticas!!
 def estadisticas_completas(serie, nombre):
     datos = serie.dropna().values
 
