@@ -155,9 +155,5 @@ def ejecutar():
         "mejor":       mejor,
     }
 
-
-if __name__ == "__main__":
-    ejecutar()
-
 if __name__ == "__main__":
     ejecutar()
