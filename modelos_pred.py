@@ -8,9 +8,6 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-import warnings
-warnings.filterwarnings("ignore")
 
 from datos import df_comunas, FEATURES, TARGET
 
@@ -24,11 +21,11 @@ def titulo(texto, nivel=1):
         print(f"\n{linea}\n  {texto}\n{linea}")
 
 #evaluación de modelo
-def evaluar(nombre: str, y_real, y_pred) -> dict:
-    mse =mean_squared_error(y_real, y_pred)
-    rmse=np.sqrt(mse)
-    mae =mean_absolute_error(y_real, y_pred)
-    r2  =r2_score(y_real, y_pred)
+def evaluar(nombre, y_real, y_pred):
+    mse  = mean_squared_error(y_real, y_pred)
+    rmse = np.sqrt(mse)
+    mae  = mean_absolute_error(y_real, y_pred)
+    r2   = r2_score(y_real, y_pred)
     print(f"\n  [{nombre}]")
     print(f"    MSE   : {mse:.4f}")
     print(f"    RMSE  : {rmse:.4f}")
@@ -37,25 +34,22 @@ def evaluar(nombre: str, y_real, y_pred) -> dict:
     return {"nombre": nombre, "mse": mse, "rmse": rmse, "mae": mae, "r2": r2}
 
 def preparar_datos():
-    X=df_comunas[FEATURES].values
-    y=df_comunas[TARGET].values
+    X = df_comunas[FEATURES].values
+    y = df_comunas[TARGET].values
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42
     )
-    scaler  =StandardScaler()
-    Xs_train=scaler.fit_transform(X_train)
-    Xs_test =scaler.transform(X_test)
-    return X_train, X_test, y_train, y_test, Xs_train, Xs_test, scaler
+    return X_train, X_test, y_train, y_test
 
 #modelos
-def regresion_lineal(Xs_train, Xs_test, y_train, y_test):
+def regresion_lineal(X_train, X_test, y_train, y_test):
     titulo("2.1  REGRESIÓN LINEAL MÚLTIPLE", nivel=2)
     lr = LinearRegression()
-    lr.fit(Xs_train, y_train)
-    evaluar("Regresión Lineal — TRAIN", y_train, lr.predict(Xs_train))
-    metricas = evaluar("Regresión Lineal — TEST",  y_test,  lr.predict(Xs_test))
+    lr.fit(X_train, y_train)
+    evaluar("Regresión Lineal — TRAIN", y_train, lr.predict(X_train))
+    metricas = evaluar("Regresión Lineal — TEST",  y_test,  lr.predict(X_test))
 
-    print("\n  Coeficientes (estandarizados):")
+    print("\n  Coeficientes:")
     for feat, coef in zip(FEATURES, lr.coef_):
         print(f"    {feat:<25}: {coef:+.4f}")
     print(f"    {'Intercepto':<25}: {lr.intercept_:+.4f}")
@@ -92,7 +86,7 @@ def random_forest(X_train, X_test, y_train, y_test):
     return rf, metricas, importancias
 
 #comparar
-def comparar_modelos(metricas_lista: list):
+def comparar_modelos(metricas_lista):
     titulo("2.4  COMPARATIVA DE MODELOS (TEST SET)", nivel=2)
     tabla = pd.DataFrame(metricas_lista)
     print("\n", tabla[["nombre", "r2", "rmse", "mae"]].to_string(index=False))
@@ -100,38 +94,41 @@ def comparar_modelos(metricas_lista: list):
     print(f"\n  ✔ Mejor modelo (mayor R²): {mejor}")
     return mejor
 
-def predecir_escenarios(lr, dt, rf, scaler):
+def predecir_escenarios(lr, dt, rf):
     titulo("2.5  PREDICCIÓN DE ESCENARIOS", nivel=2)
 
     escenarios = pd.DataFrame([
         {
-            "cobertura_tp": 0.95, "densidad_pob": 22_000, "nivel_ingreso": 3.5, "pct_teletrabajo": 0.10, "dist_centro_km": 2.0, 
-            "pct_adultos_mayor": 0.15, "dia_laboral": 1, "descripcion": "Centro bien conectado (laboral)",
+            "es_hombre": 1, "edad_tramo": 1, "dias_teletrabajo": 0,
+            "ingreso_percentil": 3.5, "modo_principal": 3, "proposito_viaje": 0,
+            "tiempo_viaje_min": 42, "descripcion": "Hombre, sin teletrabajo, metro",
         },
         {
-            "cobertura_tp": 0.45, "densidad_pob": 5_000, "nivel_ingreso": 1.8, "pct_teletrabajo": 0.08, "dist_centro_km": 25.0,
-            "pct_adultos_mayor": 0.20, "dia_laboral": 1, "descripcion": "Periferia alejada (laboral)",
+            "es_hombre": 0, "edad_tramo": 2, "dias_teletrabajo": 5,
+            "ingreso_percentil": 2.0, "modo_principal": 1, "proposito_viaje": 1,
+            "tiempo_viaje_min": 55, "descripcion": "Mujer, teletrabajo full, caminata",
         },
         {
-            "cobertura_tp": 0.80, "densidad_pob": 8_000, "nivel_ingreso": 4.8, "pct_teletrabajo": 0.32, "dist_centro_km": 10.0, "pct_adultos_mayor": 0.12, "dia_laboral": 1, "descripcion": "Alto teletrabajo e ingreso",
+            "es_hombre": 1, "edad_tramo": 3, "dias_teletrabajo": 2,
+            "ingreso_percentil": 4.5, "modo_principal": 0, "proposito_viaje": 0,
+            "tiempo_viaje_min": 45, "descripcion": "Hombre mayor, auto, ingreso alto",
         },
         {
-            "cobertura_tp": 0.70, "densidad_pob": 12_000, "nivel_ingreso": 3.0, "pct_teletrabajo": 0.15, "dist_centro_km": 8.0,
-            "pct_adultos_mayor": 0.18, "dia_laboral": 0, "descripcion": "Día no laboral (fin de semana)",
+            "es_hombre": 0, "edad_tramo": 0, "dias_teletrabajo": 0,
+            "ingreso_percentil": 1.5, "modo_principal": 2, "proposito_viaje": 3,
+            "tiempo_viaje_min": 52, "descripcion": "Mujer joven, bus, estudia",
         },
     ])
 
-    X_esc       =escenarios[FEATURES].values
-    X_esc_scaled=scaler.transform(X_esc)
+    X_esc  = escenarios[FEATURES].values
+    pred_lr = lr.predict(X_esc)
+    pred_dt = dt.predict(X_esc)
+    pred_rf = rf.predict(X_esc)
 
-    pred_lr=lr.predict(X_esc_scaled)
-    pred_dt=dt.predict(X_esc)
-    pred_rf=rf.predict(X_esc)
-
-    print(f"\n  {'Escenario':<35} {'Reg.Lin':>8} {'Árbol':>7} {'R.Forest':>9}")
-    print(f"  {'-'*35} {'-------':>8} {'-----':>7} {'--------':>9}")
+    print(f"\n  {'Escenario':<40} {'Reg.Lin':>8} {'Árbol':>7} {'R.Forest':>9}")
+    print(f"  {'-'*40} {'-------':>8} {'-----':>7} {'--------':>9}")
     for i, row in escenarios.iterrows():
-        print(f"  {row['descripcion']:<35} {pred_lr[i]:>8.3f}"
+        print(f"  {row['descripcion']:<40} {pred_lr[i]:>8.3f}"
               f" {pred_dt[i]:>7.3f} {pred_rf[i]:>9.3f}")
 
     return escenarios, pred_lr, pred_dt, pred_rf
@@ -140,25 +137,27 @@ def predecir_escenarios(lr, dt, rf, scaler):
 def ejecutar():
     titulo("PARTE 2 — MODELOS PREDICTIVOS DE MOVILIDAD URBANA")
 
-    X_train, X_test, y_train, y_test, Xs_train, Xs_test, scaler = preparar_datos()
+    X_train, X_test, y_train, y_test = preparar_datos()
 
-    lr, met_lr=regresion_lineal(Xs_train, Xs_test, y_train, y_test)
-    dt, met_dt=arbol_decision(X_train, X_test, y_train, y_test)
-    rf, met_rf, importancias=random_forest(X_train, X_test, y_train, y_test)
+    lr, met_lr = regresion_lineal(X_train, X_test, y_train, y_test)
+    dt, met_dt = arbol_decision(X_train, X_test, y_train, y_test)
+    rf, met_rf, importancias = random_forest(X_train, X_test, y_train, y_test)
 
-    mejor=comparar_modelos([met_lr, met_dt, met_rf])
-    escenarios, pred_lr, pred_dt, pred_rf=predecir_escenarios(lr, dt, rf, scaler)
+    mejor = comparar_modelos([met_lr, met_dt, met_rf])
+    escenarios, pred_lr, pred_dt, pred_rf = predecir_escenarios(lr, dt, rf)
 
     return {
-        "modelos": {"lr": lr, "dt": dt, "rf": rf},
-        "scaler":  scaler,
-        "splits":  (X_train, X_test, y_train, y_test, Xs_train, Xs_test),
-        "metricas": [met_lr, met_dt, met_rf],
+        "modelos":     {"lr": lr, "dt": dt, "rf": rf},
+        "splits":      (X_train, X_test, y_train, y_test),
+        "metricas":    [met_lr, met_dt, met_rf],
         "importancias": importancias,
-        "escenarios": (escenarios, pred_lr, pred_dt, pred_rf),
-        "mejor": mejor,
+        "escenarios":  (escenarios, pred_lr, pred_dt, pred_rf),
+        "mejor":       mejor,
     }
 
+
+if __name__ == "__main__":
+    ejecutar()
 
 if __name__ == "__main__":
     ejecutar()
