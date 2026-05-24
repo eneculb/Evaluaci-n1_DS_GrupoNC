@@ -26,7 +26,7 @@ PALETTE = [
 ]
 
 
-# ── Figura 1: Partición modal ────────────────────────────────
+# f1
 
 def fig1_particion_modal():
     modos  = df_modal["modo"]
@@ -85,7 +85,7 @@ def fig1_particion_modal():
     plt.show()
 
 
-# ── Figura 2: Tiempos de viaje y género ─────────────────────
+# f2
 
 def fig2_tiempos_genero():
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
@@ -135,8 +135,7 @@ def fig2_tiempos_genero():
     plt.show()
 
 
-# ── Figura 3: Matriz de correlación ─────────────────────────
-# CORRECCIÓN: columna objetivo es "viajes_diarios", no "tasa_viajes"
+# f3 corregida
 
 def fig3_correlacion():
     cols        = FEATURES + ["viajes_diarios"]
@@ -166,8 +165,7 @@ def fig3_correlacion():
     plt.show()
 
 
-# ── Figura 4: Comparativa de modelos ────────────────────────
-# CORRECCIÓN: splits ahora es (X_train, X_test, y_train, y_test) sin Xs
+# f4 corregida
 
 def fig4_comparativa_modelos(resultados: dict):
     X_train, X_test, y_train, y_test = resultados["splits"]
@@ -199,7 +197,7 @@ def fig4_comparativa_modelos(resultados: dict):
     plt.show()
 
 
-# ── Figura 5: Importancia de variables + escenarios ─────────
+# f5
 
 def fig5_importancia_escenarios(resultados: dict):
     importancias = resultados["importancias"]
@@ -241,8 +239,7 @@ def fig5_importancia_escenarios(resultados: dict):
     plt.show()
 
 
-# ── Figura 6: Análisis de residuales ────────────────────────
-# CORRECCIÓN: usa X_test directamente, sin Xs_test
+# f6 ya corregida
 
 def fig6_residuales(resultados: dict):
     X_train, X_test, y_train, y_test = resultados["splits"]
@@ -274,9 +271,7 @@ def fig6_residuales(resultados: dict):
     plt.tight_layout()
     plt.show()
 
-
-# ── Función principal ────────────────────────────────────────
-
+#funcion principal
 def generar_todas(resultados: dict):
     print("\n  Mostrando figuras...")
     fig1_particion_modal()
