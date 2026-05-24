@@ -8,11 +8,11 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # FUENTE: Directorio de Transporte Público Metropolitano (DTPM)
 # Reporte de Movilidad 2025. Ministerio de Transportes y
 # Telecomunicaciones, Gobierno de Chile. Marzo 2026.
---------------------------------------------------------------
+# --------------------------------------------------------------
 
--------------------------------------------------------
+# -------------------------------------------------------
 #IMPACTO DEL TELETRABAJO EN LA TASA DE VIAJES (dataset)
--------------------------------------------------------
+# -------------------------------------------------------
 print(" ANÁLISIS DE GENERACIÓN DE VIAJES Y TELETRABAJO")
 print("-" * 50)
 
@@ -40,9 +40,11 @@ data_viajes['viajes_diarios'] = (
     np.random.normal(0, 0.4, n_usuarios) # Ruido aleatorio
 )
 
---------------------------------------------------------------
+df = pd.DataFrame(data_viajes)
+
+# --------------------------------------------------------------
 # LIMPIAR DATOS (no puede haber negativos, ni filas duplicadas)
---------------------------------------------------------------
+# --------------------------------------------------------------
 print("LIMPIEZA DE DATOS")
 print("-" * 50)
 
@@ -57,10 +59,10 @@ if filas_duplicadas > 0:
 
 print(f"\nDataset listo: {df.shape[0]} filas, {df.shape[1]} columnas")
 
------------------------------
+# -----------------------------
 #MODELO REGRESIÓN TELETRABAJO
------------------------------
-df_generacion = pd.DataFrame(data_viajes)
+# -----------------------------
+df_generacion = df.copy()
 print(f"Promedio global simulado: {df_generacion['viajes_diarios'].mean():.2f} viajes/día (Cercano al 3.07 del reporte)\n")
 
 # División de datos y entrenamiento del Modelo
