@@ -1,13 +1,9 @@
-import os
 import est_desc
 import modelos_pred
 import visualizacion
 
-OUTPUT_DIR = "outputs"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
 def banner(texto):
-    linea = "█" *62
+    linea = "█" * 62
     print(f"\n{linea}")
     print(f"  {texto}")
     print(linea)
@@ -23,12 +19,12 @@ if __name__ == "__main__":
     resultados = modelos_pred.ejecutar()
 
     banner("GENERANDO FIGURAS")
-    visualizacion.generar_todas(resultados, output_dir=OUTPUT_DIR)
+    visualizacion.generar_todas(resultados)
 
     banner("RESUMEN EJECUTIVO")
-    mejor   =resultados["mejor"]
-    metricas=resultados["metricas"]
-    imps    =resultados["importancias"]
+    mejor   = resultados["mejor"]
+    metricas = resultados["metricas"]
+    imps    = resultados["importancias"]
 
     print("""
   PARTE 1 — Hallazgos descriptivos
@@ -38,9 +34,10 @@ if __name__ == "__main__":
   • Tiempos de viaje: media 49 min. Rango [38–61 min].
     Lo Barnechea (61 min) vs. Santiago Centro (38 min).
   • Tasa de viajes: hombres 3.16 > promedio 3.07 > mujeres 2.67.
-  • Teletrabajo correlaciona negativamente con la tasa (r = −0.38).
-  • Densidad poblacional es el predictor positivo más fuerte (r = +0.54).
+  • Teletrabajo correlaciona negativamente con viajes diarios (r = -0.80).
+  • Ser hombre correlaciona positivamente con viajes diarios (r = +0.27).
 """)
+
     print("  PARTE 2 — Métricas en test set")
     print("  ──────────────────────────────────")
     for m in metricas:
@@ -51,14 +48,12 @@ if __name__ == "__main__":
     for feat, imp in imps[:3]:
         print(f"    • {feat}: {imp:.3f}")
 
-    print(f"""
+    print("""
   CONCLUSIONES
   ─────────────
-  1. El teletrabajo reduce la movilidad; 20% lo practica 5+ días/semana.
-  2. La cobertura de TP y la densidad son los predictores positivos clave.
-  3. Las comunas periféricas tienen tiempos >50 min y menor tasa de viajes.
+  1. El teletrabajo es el factor que más reduce la movilidad diaria.
+  2. Los hombres generan más viajes diarios que las mujeres (3.16 vs 2.67).
+  3. El ingreso percentil tiene un efecto positivo moderado en los viajes.
   4. El 57% de viajes en TP los realizan mujeres.
-  5. La Regresión Lineal Múltiple obtuvo el mejor R² en este dataset.
-
-  Figuras disponibles en la carpeta: {OUTPUT_DIR}/
+  5. La Regresión Lineal obtuvo el mejor R² en este dataset.
 """)
